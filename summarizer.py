@@ -45,8 +45,19 @@ def readArgs(idToType, argList):
 
 def readArg(idToType, arg):
     a = dict()
-    a["name"] = arg["displayName"][0]
-    a["type"] = idToType[arg["type"]]
+    if("label" in arg):
+        a["name"] = arg["label"]
+    else:
+        if("displayName" in arg):
+            a["name"] = arg["displayName"][0]
+        else:
+            a["name"] = arg["type"]["displayName"]
+
+    if(isinstance(arg["type"], dict)):
+        a["type"] = idToType[arg["type"]["type"]]
+    else:
+        a["type"] = idToType[arg["type"]]
+
     return a
 
 def readConstructor(idToType, construct):
@@ -66,7 +77,10 @@ def readEvents(idToType, eventList):
     return [readEvent(idToType, e) for e in eventList]
 
 def readEvent(idToType, event):
-    return dict()
+    e = dict()
+    e["name"] = event["label"]
+    e["params"] = readArgs(idToType, event["args"])
+    return e
 
 def readMessages(idToType, msgList):
     return [readMessage(idToType, m) for m in msgList]
@@ -160,6 +174,12 @@ def readType(typeSpec):
     if("composite" in typeSpec["def"]):
         ty["subType"] = "UserDefinedType"
         ty["refId"] = -1
+
+    # We will probably need to fix this later. Just not sure now what type information we needs
+    if("subType" not in ty):
+        ty["subType"] = "ElementaryType"
+        if("name" not in ty):
+            ty["name"] = list(typeSpec.keys())[0]
 
     return ty  
     
